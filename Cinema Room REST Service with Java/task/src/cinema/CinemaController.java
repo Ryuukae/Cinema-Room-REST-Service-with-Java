@@ -1,5 +1,6 @@
 package cinema;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +24,7 @@ public class CinemaController {
 		response.put("rows", Cinema.getRows());
 		response.put("columns", Cinema.getColumns());
 
+
 		List<Map<String, Integer>> seatsList = new ArrayList<>();
 		Seat[][] seats = Cinema.getSeats();
 		for (int i = 0; i < seats.length; i++) {
@@ -30,6 +32,7 @@ public class CinemaController {
 				Map<String, Integer> seatMap = new HashMap<>();
 				seatMap.put("row", i + 1);
 				seatMap.put("column", j + 1);
+				seatMap.put("price", seats[ i ][ j ].getPrice());
 				seatsList.add(seatMap);
 			}
 		}
@@ -38,23 +41,28 @@ public class CinemaController {
 		return ResponseEntity.ok(response);
 	}
 
+
 	@PostMapping("/purchase")
-	public ResponseEntity<Map<String, Object>> purchase(@RequestParam int row, @RequestParam int column) {
+	public ResponseEntity<Map<String, Object>> purchase(@RequestBody Map<String, Integer> seatRequest) {
 		Map<String, Object> response = new HashMap<>();
+		int row = seatRequest.get("row") - 1;
+		int column = seatRequest.get("column") - 1;
 		try {
 			Seat seat = Cinema.getSeat(row, column);
-			if (seat == null) {
-				response.put("error", "Seat is not available");
-			} else if (seat.isBooked()) {
-				response.put("error", "Seat is already booked");
+			if (seat.isBooked()) {
+				response.put("error", "The ticket has been already purchased!");
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST); // return status code 400
 			} else {
-				Cinema.getSeat(row, column).setBooked(true);
-				response.put("success", "Seat booked");
+				seat.setBooked(true);
+				response.put("row", seat.getRow() + 1);
+				response.put("column", seat.getColumn() + 1);
+				response.put("price", seat.getPrice());
+				return ResponseEntity.ok(response); // return status code 200
 			}
 		} catch (Exception e) {
-			response.put("error", e.getMessage());
+			response.put("error", "The number of a row or a column is out of bounds!");
+			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST); // return status code 400
 		}
-		return ResponseEntity.ok(response);
 	}
 
 }

@@ -12,11 +12,19 @@ public class CustomExceptionHandler {
 
 	@ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
 	public ResponseEntity<String> handleHttpMediaTypeNotAcceptableException(HttpMediaTypeNotAcceptableException ex) {
-		return new ResponseEntity<>("Error: Media type not acceptable", HttpStatus.NOT_ACCEPTABLE);
+		String errorMessage = "Error: Media type not acceptable. Detail: " + ex.getMessage() + ". Cause: " + ex.getCause();
+		return new ResponseEntity<>(errorMessage, HttpStatus.NOT_ACCEPTABLE);
 	}
 
 	@ExceptionHandler(NoHandlerFoundException.class)
 	public ResponseEntity<String> handleNoHandlerFoundException(NoHandlerFoundException ex) {
-		return new ResponseEntity<>("Error: No handler found", HttpStatus.NOT_FOUND);
+		String errorMessage = "Error: No handler found. Detail: " + ex.getMessage() + ". Cause: " + ex.getCause();
+		return new ResponseEntity<>(errorMessage, HttpStatus.NOT_FOUND);
+	}
+
+	@ExceptionHandler(IllegalStateException.class)
+	public ResponseEntity<String> handleIllegalStateException(IllegalStateException ex) {
+		String errorMessage = "Error: " + ex.getMessage() + ". Cause: " + ex.getCause();
+		return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
 	}
 }
