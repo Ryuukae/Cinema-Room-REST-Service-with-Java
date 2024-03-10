@@ -1,9 +1,7 @@
 package cinema;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,4 +37,24 @@ public class CinemaController {
 
 		return ResponseEntity.ok(response);
 	}
+
+	@PostMapping("/purchase")
+	public ResponseEntity<Map<String, Object>> purchase(@RequestParam int row, @RequestParam int column) {
+		Map<String, Object> response = new HashMap<>();
+		try {
+			Seat seat = Cinema.getSeat(row, column);
+			if (seat == null) {
+				response.put("error", "Seat is not available");
+			} else if (seat.isBooked()) {
+				response.put("error", "Seat is already booked");
+			} else {
+				Cinema.getSeat(row, column).setBooked(true);
+				response.put("success", "Seat booked");
+			}
+		} catch (Exception e) {
+			response.put("error", e.getMessage());
+		}
+		return ResponseEntity.ok(response);
+	}
+
 }

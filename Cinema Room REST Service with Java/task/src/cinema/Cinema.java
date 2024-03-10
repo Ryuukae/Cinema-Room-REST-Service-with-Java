@@ -22,8 +22,17 @@ public class Cinema {
 		}
 	}
 
+
 	public Seat[][] getSeats() {
 		return seats;
+	}
+
+	private void bookSeat(Seat seat) {
+		if (seat.isBooked()) {
+			throw new IllegalStateException("Seat is already booked");
+		} else {
+			seat.setBooked(true);
+		}
 	}
 
 	public int getRows() {
@@ -32,5 +41,9 @@ public class Cinema {
 
 	public int getColumns() {
 		return columns;
+	}
+
+	public Seat getSeat(int row, int column) {
+		return seats[ row ][ column ];
 	}
 }
