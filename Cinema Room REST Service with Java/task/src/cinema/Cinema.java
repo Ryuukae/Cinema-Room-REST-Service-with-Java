@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public class Cinema {
 
@@ -17,9 +19,12 @@ public class Cinema {
 		LOGGER.debug("Constructing cinema with {} rows and {} columns", rows, columns);
 		seats = new Seat[ rows ][ columns ];
 		initializeSeats();
+
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < columns; j++) {
-				assignPrice(seats[ i ][ j ]);
+				Seat seat = seats[ i ][ j ];
+				seat.assignPrice(seats[ i ][ j ]);
+				seat.initializeTickets(seats[ i ][ j ]);
 			}
 		}
 	}
@@ -33,15 +38,21 @@ public class Cinema {
 		}
 	}
 
-	private void assignPrice(Seat seat) {
-		LOGGER.debug("Assigning price to seat at row {} column {}", seat.getRow(), seat.getColumn());
-		if (seat.getRow() <= 3) {
-			seat.setPrice(10);
-		} else {
-			seat.setPrice(8);
+	public Seat getSeatByToken(String token) {
+		LOGGER.debug("Getting seat by token: {}", token);
+		for (int i = 0; i < this.getRows(); i++) {
+			for (int j = 0; j < this.getColumns(); j++) {
+				Seat seat = seats[ i ][ j ];
+				if (seat.getToken().equals(UUID.fromString(token))) {
+					LOGGER.debug("Seat found: {}", seat);
+					return seat;
+				}
+			}
 		}
-		LOGGER.debug("Assigning price to {}", seat.getPrice());
+		LOGGER.debug("Seat not found");
+		return null;
 	}
+
 
 	private void bookSeat(Seat seat) {
 		LOGGER.debug("Attempting to book seat at row {} column {}", seat.getRow(), seat.getColumn());

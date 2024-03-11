@@ -4,10 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("")
@@ -54,9 +51,8 @@ public class CinemaController {
 				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST); // return status code 400
 			} else {
 				seat.setBooked(true);
-				response.put("row", seat.getRow() + 1);
-				response.put("column", seat.getColumn() + 1);
-				response.put("price", seat.getPrice());
+				response.put("token", seat.getToken().toString());
+				response.put("ticket", seat.getTicket());
 				return ResponseEntity.ok(response); // return status code 200
 			}
 		} catch (Exception e) {
@@ -64,5 +60,31 @@ public class CinemaController {
 			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST); // return status code 400
 		}
 	}
+
+	@PostMapping("/return")
+	public ResponseEntity<Map<String, Object>> handleReturn(@RequestBody Map<String, Object> request) {
+		Map<String, Object> response = new HashMap<>();
+		String token = extractToken(request);
+
+		Optional<Seat> optionalSeat = Optional.ofNullable(Cinema.getSeatByToken(token));
+		if (optionalSeat.isPresent()) {
+			Seat seat = optionalSeat.get();
+			seat.setBooked(false);
+			response.put("ticket", seat.getTicket());
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		} else {
+			response.put("error", "Wrong token!");
+			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	private String extractToken(Map<String, Object> request) {
+		String token = (String) request.get("token");
+		if (token.startsWith("\"token\":")) {
+			token = token.substring(8, token.length() - 1);
+		}
+		return token;
+	}
+
 
 }

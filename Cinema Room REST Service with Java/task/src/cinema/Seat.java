@@ -5,24 +5,26 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 public class Seat {
-	private int idCount = 1;
-	private int id;
+	private UUID token;
 	private boolean booked;
 	private int price;
 	private int row;
 	private int column;
+	private Ticket ticket;
 	private static final Logger LOGGER = LoggerFactory.getLogger(Seat.class);
 
 	public Seat(int row, int column) {
 
 		LOGGER.debug("Creating new seat with row: {} and column: {}", row, column);
 
-		this.id = idCount++;
+		this.token = UUID.randomUUID();
 
-		LOGGER.debug("Assigned ID: {}", this.id);
+		LOGGER.debug("Assigned Token: {}", this.token);
 
 		this.booked = false;
 
@@ -37,13 +39,12 @@ public class Seat {
 		LOGGER.debug("Set column to: {}", this.column);
 	}
 
-
-	public int getId() {
-		return this.id;
+	public UUID getToken() {
+		return this.token;
 	}
 
-	public void setId(int id) {
-		this.id = id;
+	public void setToken(UUID token) {
+		this.token = token;
 	}
 
 	public boolean isBooked() {
@@ -78,5 +79,23 @@ public class Seat {
 		this.column = column;
 	}
 
+	public void assignPrice(Seat seat) {
+		LOGGER.debug("Assigning price to seat at row {} column {}", seat.getRow(), seat.getColumn());
+		if (seat.getRow() <= 3) {
+			seat.setPrice(10);
+		} else {
+			seat.setPrice(8);
+		}
+		LOGGER.debug("price: {}", seat.getPrice());
+	}
 
+	public void initializeTickets(Seat seat) {
+		LOGGER.debug("Initializing tickets for seat at row {} column {}", seat.getRow(), seat.getColumn());
+		this.ticket = new Ticket(seat.getRow(), seat.getColumn(), seat.getPrice());
+		LOGGER.debug("Ticket created with row: {}, column: {}, price: {}", ticket.getRow(), ticket.getColumn(), ticket.getPrice());
+	}
+
+	public Ticket getTicket() {
+		return this.ticket;
+	}
 }
