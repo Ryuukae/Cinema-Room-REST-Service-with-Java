@@ -26,18 +26,18 @@ public class Cinema {
 
 		seats = new Seat[ rows ][ columns ];
 
-		// Initialize the seats in the cinema
-		initializeSeats();
+        // Initialize the seats in the cinema
+        initializeSeats();
 
-		// Assign a price and initial tickets to each seat
-		for (int i = 0; i < rows; i++) {
-			for (int j = 0; j < columns; j++) {
-				Seat seat = seats[ i ][ j ];
-				seat.assignPrice(seats[ i ][ j ]);
-				seat.initializeTickets(seats[ i ][ j ]);
-			}
-		}
-	}
+        // Assign a price and initial tickets to each seat
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                Seat seat = seats[ i ][ j ];
+                seat.assignPrice(seats[ i ][ j ]);
+                seat.initializeTickets(seats[ i ][ j ]);
+            }
+        }
+    }
 
 	// Get the Cinema's total income.
 	public int getIncome() {
