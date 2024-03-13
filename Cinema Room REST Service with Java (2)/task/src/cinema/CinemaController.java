@@ -59,7 +59,7 @@ public class CinemaController {
 				logger.warn("Seat already booked");
 				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST); // return status code 400
 			} else {
-				seat.setBooked(true);
+				Cinema.bookSeat(seat);
 				response.put("token", seat.getToken().toString());
 				response.put("ticket", seat.getTicket());
 				logger.debug("Ticket purchased successfully");
@@ -82,6 +82,8 @@ public class CinemaController {
 		if (optionalSeat.isPresent()) {
 			Seat seat = optionalSeat.get();
 			seat.setBooked(false);
+			Cinema.getSeatByToken(token).setBooked(false);
+			Cinema.setIncome(Cinema.getIncome() - seat.getPrice());
 			response.put("ticket", seat.getTicket());
 			logger.debug("Ticket returned successfully");
 			return new ResponseEntity<>(response, HttpStatus.OK);
@@ -90,6 +92,26 @@ public class CinemaController {
 			response.put("error", "Wrong token!");
 			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 		}
+	}
+
+	@GetMapping("/stats")
+	private ResponseEntity<Map<String, Object>> returnStats(@RequestParam String password) {
+		if (password.equals("super_secret")) {
+			logger.info("returnStats() method called");
+
+			Map<String, Object> response = new HashMap<>();
+			response.put("income", Cinema.getIncome());
+			response.put("available", Cinema.getAvailableSeats());
+			response.put("purchased", Cinema.getTotalPurchasedTickets());
+
+			logger.debug("Response ready: {}", response);
+			return ResponseEntity.ok(response);
+		} else {
+			Map<String, Object> response = new HashMap<>();
+			response.put("error", "The password is wrong!");
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+		}
+
 	}
 
 	private String extractToken(Map<String, Object> request) {
@@ -102,5 +124,6 @@ public class CinemaController {
 		logger.debug("Token after processing: {}", token);
 		return token;
 	}
+
 
 }

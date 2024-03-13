@@ -19,6 +19,7 @@ public class Cinema {
 	public Cinema() {
 		LOGGER.debug("Constructing cinema with {} rows and {} columns", rows, columns);
 		seats = new Seat[ rows ][ columns ];
+
 		initializeSeats();
 
 		for (int i = 0; i < rows; i++) {
@@ -52,6 +53,7 @@ public class Cinema {
 
 	private void initializeSeats() {
 		LOGGER.debug("Initializing seats");
+		availableSeats = rows * columns;
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < columns; j++) {
 				LOGGER.trace("Creating new seat at row {} column {}", i, j);
@@ -76,15 +78,23 @@ public class Cinema {
 		return null;
 	}
 
-	private void bookSeat(Seat seat) {
+	public void bookSeat(Seat seat) {
 		LOGGER.debug("Attempting to book seat at row {} column {}", seat.getRow(), seat.getColumn());
 		if (seat.isBooked()) {
 			LOGGER.debug("Seat at row {} column {} is already booked", seat.getRow(), seat.getColumn());
 			throw new IllegalStateException("Seat is already booked");
 		} else {
 			seat.setBooked(true);
+			availableSeats--;
+			totalPurchasedTickets++;
+			income += seat.getPrice();
 			LOGGER.debug("Seat at row {} column {} booked successfully", seat.getRow(), seat.getColumn());
 		}
+	}
+
+	public void setIncome(int income) {
+		LOGGER.debug("Setting income to: {}", income);
+		this.income = income;
 	}
 
 	public Seat[][] getSeats() {
