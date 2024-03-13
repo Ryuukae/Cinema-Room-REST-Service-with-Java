@@ -28,7 +28,7 @@ public class CinemaController {
 
 		List<Map<String, Integer>> seatsList = new ArrayList<>();
 		Seat[][] seats = Cinema.getSeats();
-
+		logger.debug("Preparing seats list");
 		for (int i = 0; i < seats.length; i++) {
 			for (int j = 0; j < seats[ i ].length; j++) {
 				Map<String, Integer> seatMap = new HashMap<>();
@@ -41,7 +41,6 @@ public class CinemaController {
 
 		response.put("seats", seatsList);
 		logger.debug("Response ready: {}", response);
-
 		return ResponseEntity.ok(response);
 	}
 
@@ -54,21 +53,23 @@ public class CinemaController {
 
 		try {
 			Seat seat = Cinema.getSeat(row, column);
+			logger.debug("Fetched seat for purchase");
+
 			if (seat.isBooked()) {
 				response.put("error", "The ticket has been already purchased!");
 				logger.warn("Seat already booked");
-				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST); // return status code 400
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			} else {
 				Cinema.bookSeat(seat);
 				response.put("token", seat.getToken().toString());
 				response.put("ticket", seat.getTicket());
 				logger.debug("Ticket purchased successfully");
-				return ResponseEntity.ok(response); // return status code 200
+				return ResponseEntity.ok(response);
 			}
 		} catch (Exception e) {
 			logger.error("Exception occurred", e);
 			response.put("error", "The number of a row or a column is out of bounds!");
-			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST); // return status code 400
+			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 		}
 	}
 
@@ -81,8 +82,8 @@ public class CinemaController {
 		Optional<Seat> optionalSeat = Optional.ofNullable(Cinema.getSeatByToken(token));
 		if (optionalSeat.isPresent()) {
 			Seat seat = optionalSeat.get();
+			logger.debug("Fetched seat for return");
 			seat.setBooked(false);
-			Cinema.getSeatByToken(token).setBooked(false);
 			Cinema.setIncome(Cinema.getIncome() - seat.getPrice());
 			response.put("ticket", seat.getTicket());
 			logger.debug("Ticket returned successfully");
@@ -120,10 +121,8 @@ public class CinemaController {
 		logger.debug("Token before processing: {}", token);
 		if (token.startsWith("\"token\":")) {
 			token = token.substring(8, token.length() - 1);
+			logger.debug("Token after processing: {}", token);
 		}
-		logger.debug("Token after processing: {}", token);
 		return token;
 	}
-
-
 }

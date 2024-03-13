@@ -27,5 +27,4 @@ public class CustomExceptionHandler {
 		String errorMessage = "Error: " + ex.getMessage() + ". Cause: " + ex.getCause();
 		return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
 	}
-
 }
