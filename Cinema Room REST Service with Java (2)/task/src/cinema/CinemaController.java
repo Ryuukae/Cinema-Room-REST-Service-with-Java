@@ -11,119 +11,105 @@ import java.util.*;
 @RestController
 @RequestMapping("")
 public class CinemaController {
-	private final Cinema Cinema;
+
+	// Declare our cinema object
+	private final Cinema cinema;
+	// Initializing a Logger object
 	private static final Logger logger = LoggerFactory.getLogger(CinemaController.class);
 
-	public CinemaController(Cinema Cinema) {
-		this.Cinema = Cinema;
-		logger.debug("CinemaController initialized with Cinema: {}", Cinema);
+	// We are injecting a Cinema object into our controller
+	public CinemaController(Cinema cinema) {
+		this.cinema = cinema;
+		logger.debug("CinemaController created with Cinema object"); // Logger at the initialization of CinemaController
 	}
 
 	@GetMapping("/seats")
 	public ResponseEntity<Map<String, Object>> getSeats() {
-		logger.info("getSeats() method called.");
+		logger.debug("Processing GET request to /seats"); // Logger at the start of getSeats processing
 		Map<String, Object> response = new HashMap<>();
-		response.put("rows", Cinema.getRows());
-		response.put("columns", Cinema.getColumns());
+		// Adding cinema's rows and columns information to the response
+		response.put("rows", cinema.getRows());
+		response.put("columns", cinema.getColumns());
 
+		// Generating a list of seats present in the cinema
+		List<Map<String, Integer>> seatsList = generateSeatList(cinema);
+		response.put("seats", seatsList);
+
+		logger.debug("Sending response with seat info"); // Logger at the end of getSeats processing
+		return ResponseEntity.ok(response); // Returning HTTP 200 OK with body (seat info)
+	}
+
+	// A helper method to generate a list of seats information
+	private static List<Map<String, Integer>> generateSeatList(Cinema cinema) {
 		List<Map<String, Integer>> seatsList = new ArrayList<>();
-		Seat[][] seats = Cinema.getSeats();
-
+		Seat[][] seats = cinema.getSeats();
 		for (int i = 0; i < seats.length; i++) {
 			for (int j = 0; j < seats[ i ].length; j++) {
 				Map<String, Integer> seatMap = new HashMap<>();
+				// Adapting the row and column value into human-friendly (starting from 1 not 0)
 				seatMap.put("row", i + 1);
 				seatMap.put("column", j + 1);
 				seatMap.put("price", seats[ i ][ j ].getPrice());
 				seatsList.add(seatMap);
 			}
 		}
-
-		response.put("seats", seatsList);
-		logger.debug("Response ready: {}", response);
-
-		return ResponseEntity.ok(response);
+		logger.debug("Generated seat list"); // Logger after seat list generation
+		return seatsList;
 	}
 
 	@PostMapping("/purchase")
 	public ResponseEntity<Map<String, Object>> purchase(@RequestBody Map<String, Integer> seatRequest) {
-		logger.info("purchase() method called with request: {}", seatRequest);
+		logger.debug("Processing POST request to /purchase"); // Beginning processing of /purchase POST request
 		Map<String, Object> response = new HashMap<>();
 		int row = seatRequest.get("row") - 1;
 		int column = seatRequest.get("column") - 1;
-
 		try {
-			Seat seat = Cinema.getSeat(row, column);
-			if (seat.isBooked()) {
-				response.put("error", "The ticket has been already purchased!");
-				logger.warn("Seat already booked");
-				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST); // return status code 400
-			} else {
-				Cinema.bookSeat(seat);
+			Seat seat = cinema.getSeat(row, column);
+			if (!seat.isBooked()) { // If the seat isn't booked
+				cinema.bookSeat(seat); // Now we book the seat
 				response.put("token", seat.getToken().toString());
 				response.put("ticket", seat.getTicket());
-				logger.debug("Ticket purchased successfully");
-				return ResponseEntity.ok(response); // return status code 200
+				logger.debug("Ticket successfully booked, sending response."); // Seat booked successfully
+				return ResponseEntity.ok(response);
+			} else { // If seat is already booked, generate error
+				logger.debug("Seat already booked, sending error."); // Seat already booked
+				response.put("error", "The ticket has been already purchased!");
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			}
 		} catch (Exception e) {
-			logger.error("Exception occurred", e);
+			logger.debug("Invalid row or column, sending error."); // Seat coordinates out of bounds
 			response.put("error", "The number of a row or a column is out of bounds!");
-			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST); // return status code 400
+			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 		}
 	}
 
 	@PostMapping("/return")
 	public ResponseEntity<Map<String, Object>> handleReturn(@RequestBody Map<String, Object> request) {
-		logger.info("handleReturn() method called with request: {}", request);
+		logger.debug("Processing POST request to /return"); // Beginning processing of /return POST request
 		Map<String, Object> response = new HashMap<>();
 		String token = extractToken(request);
 
-		Optional<Seat> optionalSeat = Optional.ofNullable(Cinema.getSeatByToken(token));
+		Optional<Seat> optionalSeat = Optional.ofNullable(cinema.getSeatByToken(token));
 		if (optionalSeat.isPresent()) {
 			Seat seat = optionalSeat.get();
-			seat.setBooked(false);
-			Cinema.getSeatByToken(token).setBooked(false);
-			Cinema.setIncome(Cinema.getIncome() - seat.getPrice());
+			seat.setBooked(false); // Un-book the seat
+			logger.debug("Returning seat, sending response."); // Successfully returned the seat
 			response.put("ticket", seat.getTicket());
-			logger.debug("Ticket returned successfully");
 			return new ResponseEntity<>(response, HttpStatus.OK);
-		} else {
-			logger.warn("Wrong token provided");
+		} else { // Invalid token error
+			logger.debug("Provided token is invalid, sending error."); // Invalid token
 			response.put("error", "Wrong token!");
 			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 		}
 	}
 
-	@GetMapping("/stats")
-	private ResponseEntity<Map<String, Object>> returnStats(@RequestParam String password) {
-		if (password.equals("super_secret")) {
-			logger.info("returnStats() method called");
-
-			Map<String, Object> response = new HashMap<>();
-			response.put("income", Cinema.getIncome());
-			response.put("available", Cinema.getAvailableSeats());
-			response.put("purchased", Cinema.getTotalPurchasedTickets());
-
-			logger.debug("Response ready: {}", response);
-			return ResponseEntity.ok(response);
-		} else {
-			Map<String, Object> response = new HashMap<>();
-			response.put("error", "The password is wrong!");
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-		}
-
-	}
-
+	// A helper method to clean the token string
 	private String extractToken(Map<String, Object> request) {
-		logger.debug("extractToken() method called with request: {}", request);
 		String token = (String) request.get("token");
-		logger.debug("Token before processing: {}", token);
 		if (token.startsWith("\"token\":")) {
-			token = token.substring(8, token.length() - 1);
+			token = token.substring(8, token.length() - 1); // Cleaning up the string
 		}
-		logger.debug("Token after processing: {}", token);
+		logger.debug("Token extracted"); // Token extracted successfully
 		return token;
 	}
-
-
 }

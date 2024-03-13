@@ -4,116 +4,137 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public class Cinema {
 
+	// Logger instance used for debugging and logging.
 	private static final Logger LOGGER = LoggerFactory.getLogger(Cinema.class);
 
-	private final Seat[][] seats;
+	// Number of rows and columns for the cinema.
 	private final int rows = 9;
 	private final int columns = 9;
-	private int income;
-	private int availableSeats;
-	private int totalPurchasedTickets;
+
+	// 2D array to hold all the Seats in the cinema.
+	private final Seat[][] seats;
 
 	public Cinema() {
+		// Logging the initiation of Cinema construction.
 		LOGGER.debug("Constructing cinema with {} rows and {} columns", rows, columns);
+
+		// Allocating memory for seats.
 		seats = new Seat[ rows ][ columns ];
 
+		// Initialize all the seats.
 		initializeSeats();
 
+		// Loop over each seat to assign the price and ticket initialization.
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < columns; j++) {
-				LOGGER.debug("Assigning price for seat at row {} column {}", i, j);
 				Seat seat = seats[ i ][ j ];
+				// Assign seat price and Initialize ticket.
 				seat.assignPrice(seats[ i ][ j ]);
-				LOGGER.debug("Initializing tickets for seat at row {} column {}", i, j);
 				seat.initializeTickets(seats[ i ][ j ]);
+
+				// Log the successful price assignment and ticket initialization.
+				LOGGER.debug("Assigned price and initialized tickets for seat at row {} and column {}", i, j);
 			}
 		}
-		LOGGER.debug("Cinema successfully created with {} rows and {} columns", rows, columns);
 	}
-
-
-	public int getIncome() {
-		LOGGER.debug("Fetching total income");
-		return income;
-	}
-
-	public int getAvailableSeats() {
-		LOGGER.debug("Fetching available seats");
-		return availableSeats;
-	}
-
-	public int getTotalPurchasedTickets() {
-		LOGGER.debug("Fetching total purchased tickets");
-		return totalPurchasedTickets;
-	}
-
 
 	private void initializeSeats() {
+		// Log start of initialization.
 		LOGGER.debug("Initializing seats");
-		availableSeats = rows * columns;
+
+		// Loop over each place in the 2D array and create a seat instance.
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < columns; j++) {
-				LOGGER.trace("Creating new seat at row {} column {}", i, j);
 				seats[ i ][ j ] = new Seat(i, j);
+
+				// Log the successful initialization of a seat.
+				LOGGER.debug("Initialized seat at row {} and column {}", i, j);
 			}
 		}
-		LOGGER.debug("Seats successfully initialized");
 	}
 
+	// Method to get seat by token.
 	public Seat getSeatByToken(String token) {
+		// Logging the start of token search.
 		LOGGER.debug("Getting seat by token: {}", token);
-		for (int i = 0; i < rows; i++) {
-			for (int j = 0; j < columns; j++) {
+
+		// Loop over each seat and check if the token matches.
+		for (int i = 0; i < this.getRows(); i++) {
+			for (int j = 0; j < this.getColumns(); j++) {
 				Seat seat = seats[ i ][ j ];
-				if (seat.getToken().equals(token)) {
-					LOGGER.debug("Seat found at row {} column {}", i, j);
+				if (seat.getToken().equals(UUID.fromString(token))) {
+					// Log successful seat token match.
+					LOGGER.debug("Seat found: {}", seat);
+
+					// return the seat.
 					return seat;
 				}
 			}
 		}
-		LOGGER.debug("Seat not found for token: {}", token);
+		// Log that the seat with the token wasn't found.
+		LOGGER.debug("Seat not found");
+
+		// Return null if no seat found.
 		return null;
 	}
 
-	public void bookSeat(Seat seat) {
+	// Method to book a seat.
+	void bookSeat(Seat seat) {
+		// Log the attempt to book a seat.
 		LOGGER.debug("Attempting to book seat at row {} column {}", seat.getRow(), seat.getColumn());
+
+		// Check if the seat is already booked.
 		if (seat.isBooked()) {
-			LOGGER.debug("Seat at row {} column {} is already booked", seat.getRow(), seat.getColumn());
+			// Log that the seat is already booked.
+			LOGGER.debug("Seat already booked, throwing exception");
 			throw new IllegalStateException("Seat is already booked");
 		} else {
+			// Book the seat.
 			seat.setBooked(true);
-			availableSeats--;
-			totalPurchasedTickets++;
-			income += seat.getPrice();
-			LOGGER.debug("Seat at row {} column {} booked successfully", seat.getRow(), seat.getColumn());
+
+			// Log successful seat booking.
+			LOGGER.debug("Seat booked successfully");
 		}
 	}
 
-	public void setIncome(int income) {
-		LOGGER.debug("Setting income to: {}", income);
-		this.income = income;
-	}
-
+	// Getter for all seats.
 	public Seat[][] getSeats() {
-		LOGGER.debug("Fetching all seats of cinema");
+		// Log the attempt to retrieve all seats.
+		LOGGER.debug("Getting all seats");
+
+		// Return all seats.
 		return seats;
 	}
 
+	// Getter for rows.
 	public int getRows() {
-		LOGGER.debug("Fetching number of rows");
+		// Log the attempt to retrieve the number of rows.
+		LOGGER.debug("Getting number of rows");
+
+		// Return number of rows.
 		return rows;
 	}
 
+	// Getter for columns.
 	public int getColumns() {
-		LOGGER.debug("Fetching number of columns");
+		// Log the attempt to retrieve the number of columns.
+		LOGGER.debug("Getting number of columns");
+
+		// Return number of columns.
 		return columns;
 	}
 
+	// Getter for a specific seat by row and column.
 	public Seat getSeat(int row, int column) {
-		LOGGER.debug("Fetching seat at row {} column {}", row, column);
+		// Log the attempt to retrieve the seat.
+		LOGGER.debug("Getting seat at row {} and column {}", row, column);
+
+		// Return the seat.
 		return seats[ row ][ column ];
 	}
 }
