@@ -1,4 +1,8 @@
-# Virtual-Cinema RESTful API
+# Cinema-Room-REST-Service (w/Java)
+
+![Cinema-Room-REST-Service-with-Java](https://github.com/user-attachments/assets/2040998e-9b29-439f-b429-89bd597dc8ae)
+
+## Virtual-Cinema RESTful API
 
 This project from JetBrains Academy aims to create a RESTful API for a virtual movie theater. It involves modeling a cinema's seating layout and developing an endpoint to retrieve this information. 
 The goal is to develop skills in building web services, handling HTTP requests, and working with JSON.
